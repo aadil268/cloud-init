@@ -1,6 +1,19 @@
 #cloud-config
 # Cloud-init configuration for Ubuntu VM on Azure
 
+# Ensure cloud-init is installed and updated
+runcmd:
+  - |-
+    if ! command -v cloud-init &> /dev/null
+    then
+        echo "Cloud-init not found, installing..."
+        apt-get update -y
+        apt-get install -y cloud-init
+        echo "Cloud-init installed."
+    else
+        echo "Cloud-init already installed."
+    fi
+
 # Update package cache and upgrade packages
 package_update: true
 package_upgrade: true
@@ -32,7 +45,7 @@ write_files:
       echo "$(date): Starting main script execution" >> $LOG_FILE
       
       # Download and execute the sample script
-      SCRIPT_URL="https://raw.githubusercontent.com/YOUR_USERNAME/azure-ubuntu-cloudinit/main/config/sample-script.sh"
+      SCRIPT_URL="https://raw.githubusercontent.com/aadil268/cloud-init/main/config/sample-script.sh"
       SCRIPT_PATH="/opt/cloudinit-scripts/sample-script.sh"
       
       echo "$(date): Downloading sample script from $SCRIPT_URL" >> $LOG_FILE

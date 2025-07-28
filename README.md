@@ -149,7 +149,7 @@ After deployment:
 
 2. **SSH to the VM:**
    ```bash
-   ssh azureuser@<public-ip>
+   ssh azureuser@$(terraform output -raw public_ip_address)
    ```
 
 3. **Check cloud-init status:**
