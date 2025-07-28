@@ -23,7 +23,7 @@ runcmd:
     LOG_FILE="/var/log/cloudinit-scripts/main-script.log"
     echo "$(date): Starting main script execution" >> $LOG_FILE
     
-    SCRIPT_URL="https://raw.githubusercontent.com/YOUR_USERNAME/azure-ubuntu-cloudinit/main/config/sample-script.sh"
+    SCRIPT_URL="https://raw.githubusercontent.com/aadil268/cloud-init/main/config/sample-script.sh"
     SCRIPT_PATH="/opt/cloudinit-scripts/sample-script.sh"
     
     echo "$(date): Attempting to download sample script from $SCRIPT_URL" >> $LOG_FILE
@@ -67,4 +67,3 @@ write_files:
 
 # Final message
 final_message: "Cloud-init setup completed successfully. Check /var/log/cloudinit-scripts/ for execution logs."
-
