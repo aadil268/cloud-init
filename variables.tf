@@ -6,7 +6,7 @@ variable "subscription_id" {
 variable "resource_group_name" {
   description = "Name of the resource group"
   type        = string
-  default     = "rg-cloudinit-test"
+  default     = "rg-cloudinit-demo"
 }
 
 variable "location" {
@@ -14,3 +14,4 @@ variable "location" {
   type        = string
   default     = "East US"
 }
+

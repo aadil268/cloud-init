@@ -2,24 +2,12 @@
 # Cloud-init configuration for Ubuntu VM on Azure
 
 # Ensure cloud-init is installed and updated
-runcmd:
-  - |-
-    if ! command -v cloud-init &> /dev/null
-    then
-        echo "Cloud-init not found, installing..."
-        apt-get update -y
-        apt-get install -y cloud-init
-        echo "Cloud-init installed."
-    else
-        echo "Cloud-init already installed."
-    fi
+# This block will run very early in the boot process
+apt_update: true
+apt_upgrade: true
 
-# Update package cache and upgrade packages
-package_update: true
-package_upgrade: true
-
-# Install required packages
 packages:
+  - cloud-init
   - curl
   - wget
   - git
@@ -27,45 +15,37 @@ packages:
   - unzip
   - jq
 
-# Create directories
+# Create directories and download/execute the main script
 runcmd:
   - mkdir -p /opt/cloudinit-scripts
   - mkdir -p /var/log/cloudinit-scripts
+  - |
+    LOG_FILE="/var/log/cloudinit-scripts/main-script.log"
+    echo "$(date): Starting main script execution" >> $LOG_FILE
+    
+    SCRIPT_URL="https://raw.githubusercontent.com/YOUR_USERNAME/azure-ubuntu-cloudinit/main/config/sample-script.sh"
+    SCRIPT_PATH="/opt/cloudinit-scripts/sample-script.sh"
+    
+    echo "$(date): Attempting to download sample script from $SCRIPT_URL" >> $LOG_FILE
+    
+    if curl -s -o $SCRIPT_PATH $SCRIPT_URL; then
+        chmod +x $SCRIPT_PATH
+        echo "$(date): Successfully downloaded sample script" >> $LOG_FILE
+        
+        echo "$(date): Executing sample script" >> $LOG_FILE
+        bash $SCRIPT_PATH >> $LOG_FILE 2>&1
+        
+        echo "$(date): Sample script execution completed with exit code: $?" >> $LOG_FILE
+    else
+        echo "$(date): Failed to download sample script, executing local fallback" >> $LOG_FILE
+        # Fallback to local script execution
+        bash /opt/cloudinit-scripts/sample-script-local.sh >> $LOG_FILE 2>&1
+    fi
+    
+    echo "$(date): Main script execution completed" >> $LOG_FILE
 
-# Download and execute the main script
+# Write the local fallback script
 write_files:
-  - path: /opt/cloudinit-scripts/main-script.sh
-    permissions: '0755'
-    content: |
-      #!/bin/bash
-      # Main script executed by cloud-init
-      
-      LOG_FILE="/var/log/cloudinit-scripts/main-script.log"
-      
-      echo "$(date): Starting main script execution" >> $LOG_FILE
-      
-      # Download and execute the sample script
-      SCRIPT_URL="https://raw.githubusercontent.com/aadil268/cloud-init/main/config/sample-script.sh"
-      SCRIPT_PATH="/opt/cloudinit-scripts/sample-script.sh"
-      
-      echo "$(date): Downloading sample script from $SCRIPT_URL" >> $LOG_FILE
-      
-      if curl -s -o $SCRIPT_PATH $SCRIPT_URL; then
-          chmod +x $SCRIPT_PATH
-          echo "$(date): Successfully downloaded sample script" >> $LOG_FILE
-          
-          echo "$(date): Executing sample script" >> $LOG_FILE
-          bash $SCRIPT_PATH >> $LOG_FILE 2>&1
-          
-          echo "$(date): Sample script execution completed with exit code: $?" >> $LOG_FILE
-      else
-          echo "$(date): Failed to download sample script, executing local fallback" >> $LOG_FILE
-          # Fallback to local script execution
-          bash /opt/cloudinit-scripts/sample-script-local.sh >> $LOG_FILE 2>&1
-      fi
-      
-      echo "$(date): Main script execution completed" >> $LOG_FILE
-
   - path: /opt/cloudinit-scripts/sample-script-local.sh
     permissions: '0755'
     content: |
@@ -84,10 +64,6 @@ write_files:
       echo "$(date): Installed packages:"
       dpkg -l | wc -l
       echo "$(date): Local sample script completed"
-
-# Execute the main script
-runcmd:
-  - /opt/cloudinit-scripts/main-script.sh
 
 # Final message
 final_message: "Cloud-init setup completed successfully. Check /var/log/cloudinit-scripts/ for execution logs."
