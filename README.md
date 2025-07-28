@@ -14,12 +14,14 @@ This solution creates an Ubuntu VM on Azure that uses cloud-init to:
 
 ```
 azure-ubuntu-cloudinit/
-├── main.tf                    # Main Terraform configuration
-├── variables.tf               # Terraform variables
-├── README.md                  # This documentation
-└── config/
-    ├── cloud-init.yaml        # Cloud-init configuration
-    └── sample-script.sh       # Sample script executed by cloud-init
+├── main.tf                      # Main Terraform configuration
+├── variables.tf                 # Terraform variables
+├── terraform.tfvars             # Sensitive values (ignored by git)
+├── README.md                    # This documentation
+├── .gitignore                   # Git ignore rules
+└── config/                      # Configuration Files
+    ├── cloud-init.yaml          # Cloud-init configuration
+    └── sample-script.sh         # Sample script executed by cloud-init
 ```
 
 ## Prerequisites
@@ -42,9 +44,9 @@ azure-ubuntu-cloudinit/
    terraform init
    ```
 
-3. **Set your Azure subscription ID:**
+3. **Set your terraform.tfvars with your Azure subscription ID and desired settings:**
    ```bash
-   export TF_VAR_subscription_id="your-subscription-id"
+   subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
    ```
 
 4. **Plan the deployment:**
@@ -71,13 +73,15 @@ The cloud-init configuration:
 ### Sample Script (`config/sample-script.sh`)
 
 The sample script performs:
-- System information collection
-- Network configuration analysis
-- Disk and memory usage reporting
-- Creation of sample application files
-- Setup of monitoring service
-- Log rotation configuration
-- Generation of provisioning report
+- Prints a start message to indicate the script execution has begun.
+- Generates a config file:
+   - Path: /opt/sample-app/app.conf
+   - Contains app name, creation time, and hostname
+- Creates a status file:
+   - Path: /opt/sample-app/status.json
+   - JSON with status: completed and current timestamp
+- Prints completion message with paths to the created files.
+- Exits with success (exit 0).
 
 ## What Gets Created
 
@@ -99,16 +103,11 @@ The sample script performs:
 ### Application Files Created on VM
 - `/opt/sample-app/app.conf` - Application configuration
 - `/opt/sample-app/status.json` - System status in JSON format
-- `/opt/sample-app/monitor.sh` - Monitoring script
-- `/opt/sample-app/provisioning-report.txt` - Detailed provisioning report
-- `/etc/systemd/system/sample-monitor.service` - Systemd monitoring service
 
 ### Log Files
 - `/var/log/cloudinit-scripts/main-script.log` - Main script execution log
 - `/var/log/cloud-init.log` - Cloud-init system log
 - `/var/log/cloud-init-output.log` - Cloud-init output log
-
-## Customization
 
 ### Modifying the Sample Script
 
@@ -142,45 +141,25 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
 After deployment:
 
-1. **Get the public IP:**
-   ```bash
-   terraform output
-   ```
-
-2. **SSH to the VM:**
+1. **SSH to the VM:**
    ```bash
    ssh azureuser@$(terraform output -raw public_ip_address)
    ```
 
-3. **Check cloud-init status:**
+2. **Check cloud-init status:**
    ```bash
    sudo cloud-init status
    ```
 
-4. **View execution logs:**
+3. **View execution logs:**
    ```bash
    sudo cat /var/log/cloudinit-scripts/main-script.log
    ```
 
-5. **Check the provisioning report:**
+4. **Check the provisioning report:**
    ```bash
    cat /opt/sample-app/provisioning-report.txt
    ```
-
-## Monitoring
-
-The solution includes a monitoring service that can be started manually:
-
-```bash
-# Start the monitoring service
-sudo systemctl start sample-monitor.service
-
-# Check service status
-sudo systemctl status sample-monitor.service
-
-# View monitoring logs
-sudo journalctl -u sample-monitor.service -f
-```
 
 ## Troubleshooting
 
@@ -210,7 +189,7 @@ sudo /opt/cloudinit-scripts/sample-script.sh
 ### Network Issues
 ```bash
 # Check if script download failed
-curl -I https://raw.githubusercontent.com/YOUR_USERNAME/azure-ubuntu-cloudinit/main/config/sample-script.sh
+curl -I https://raw.githubusercontent.com/YOUR_USERNAME/cloud-init/main/config/sample-script.sh
 ```
 
 ## Security Considerations
@@ -259,4 +238,3 @@ For issues and questions:
 ---
 
 **Note**: Remember to update the script URL in `config/cloud-init.yaml` to point to your actual repository after pushing to GitHub.
-
